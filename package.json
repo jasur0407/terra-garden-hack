@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fetch": "node scripts/fetch-stats.mjs",
+    "backfill": "node scripts/fetch-stats.mjs --backfill 60"
   },
   "devDependencies": {
     "vite": "^7.0.0"

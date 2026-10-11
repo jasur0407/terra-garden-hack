@@ -30,3 +30,28 @@ rect(79, 38, 2, 14, '#3f8f3a');
 rect(73, 36, 6, 3, '#5fbf4a');
 rect(81, 32, 6, 3, '#5fbf4a');
 rect(76, 52, 8, 3, '#5a381d');
+
+const $ = (id) => document.getElementById(id);
+const latest = await loadLatest();
+
+if (!latest) {
+  $('ro-empty').hidden = false;
+} else {
+  $('ro-name').textContent = `@${latest.username}`;
+  $('ro-hours').textContent = (latest.totalSeconds / 3600).toFixed(1);
+
+  const top = latest.projects.slice(0, 8);
+  const max = top[0]?.seconds || 1;
+  for (const p of top) {
+    const li = document.createElement('li');
+    const name = document.createElement('span');
+    name.textContent = p.name;
+    const hours = document.createElement('b');
+    hours.textContent = `${(p.seconds / 3600).toFixed(1)}h`;
+    const bar = document.createElement('i');
+    bar.style.width = `${(p.seconds / max) * 100}%`;
+    li.append(name, hours, bar);
+    $('ro-projects').append(li);
+  }
+}
+

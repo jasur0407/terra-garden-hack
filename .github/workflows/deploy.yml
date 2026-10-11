@@ -1,12 +1,14 @@
-name: Deploy to GitHub Pages
+name: Fetch stats and deploy
 
 on:
+  schedule:
+    - cron: '17 3 * * *' 
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -27,6 +29,24 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Fetch Hackatime stats
+        if: github.event_name != 'push'
+        continue-on-error: true
+        env:
+          HACKATIME_USER: ${{ vars.HACKATIME_USER }}
+        run: node scripts/fetch-stats.mjs
+
+      - name: Commit snapshot
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "terra-garden[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data
+          if git diff --cached --quiet; then echo "No data changes"; else
+            git commit -m "chore: daily stats snapshot $(date -u +%F)"
+            git push
+          fi
 
       - run: npm ci
       - run: npm run build
