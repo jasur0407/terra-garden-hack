@@ -1,0 +1,15 @@
+{
+  "name": "terra-garden-hack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A pixel-art farm that grows from your real coding time (Hackatime).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}
