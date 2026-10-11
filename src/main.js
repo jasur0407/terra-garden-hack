@@ -1,57 +1,31 @@
 import './style.css';
+import { loadLatest } from './data.js';
+import { makeDemo } from './demo.js';
+import { buildFarm } from './farm.js';
+import { Camera, bindInput } from './camera.js';
+import { Renderer } from './renderer.js';
 
-// creating a small canvas and scaling it up
 const canvas = document.getElementById('farm');
-canvas.width = 160;
-canvas.height = 90;
-const ctx = canvas.getContext('2d');
 
-const rect = (x, y, w, h, color) => {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, w, h);
-};
+// Real stats if the Action has saved some, otherwise a made-up demo farm
+const latest = (await loadLatest()) ?? makeDemo().latest;
 
-// Grass - an arrangement of 8px tiles with dark and light green
-for (let ty = 0; ty < 12; ty++) {
-  for (let tx = 0; tx < 20; tx++) rect(tx * 8, ty * 8, 8, 8, (tx + ty) % 2 ? '#78b15f' : '#6fa957');
+const farm = buildFarm(latest);
+const world = { width: farm.width, height: farm.height };
+const PAD = 4 * 16;
+const fr = farm.farmRect;
+const camera = new Camera(world, { x: fr.x * 16 - PAD, y: fr.y * 16 - PAD, w: fr.w * 16 + 2 * PAD, h: fr.h * 16 + 2 * PAD });
+const renderer = new Renderer(canvas, farm, camera);
+
+bindInput(canvas, camera, {});
+window.addEventListener('resize', () => renderer.resize());
+renderer.resize();
+
+function loop(now) {
+  renderer.frame(now);
+  requestAnimationFrame(loop);
 }
+requestAnimationFrame(loop);
 
-// A soil in a similar way with rows
-rect(52, 22, 56, 40, '#4f3219');
-rect(56, 26, 48, 32, '#6b4423');
-for (let y = 28; y < 58; y += 4) rect(56, y, 48, 1, '#5a381d');
-rect(50, 20, 60, 2, '#a6713a');
-rect(50, 62, 60, 2, '#a6713a');
-rect(50, 20, 2, 44, '#a6713a');
-rect(108, 20, 2, 44, '#a6713a');
-
-// A plant
-rect(79, 38, 2, 14, '#3f8f3a');
-rect(73, 36, 6, 3, '#5fbf4a');
-rect(81, 32, 6, 3, '#5fbf4a');
-rect(76, 52, 8, 3, '#5a381d');
-
-const $ = (id) => document.getElementById(id);
-const latest = await loadLatest();
-
-if (!latest) {
-  $('ro-empty').hidden = false;
-} else {
-  $('ro-name').textContent = `@${latest.username}`;
-  $('ro-hours').textContent = (latest.totalSeconds / 3600).toFixed(1);
-
-  const top = latest.projects.slice(0, 8);
-  const max = top[0]?.seconds || 1;
-  for (const p of top) {
-    const li = document.createElement('li');
-    const name = document.createElement('span');
-    name.textContent = p.name;
-    const hours = document.createElement('b');
-    hours.textContent = `${(p.seconds / 3600).toFixed(1)}h`;
-    const bar = document.createElement('i');
-    bar.style.width = `${(p.seconds / max) * 100}%`;
-    li.append(name, hours, bar);
-    $('ro-projects').append(li);
-  }
-}
-
+// Tiny debugging handle for the browser console
+window.terra = { farm, camera, renderer };
